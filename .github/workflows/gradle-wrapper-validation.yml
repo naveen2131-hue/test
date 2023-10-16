@@ -6,7 +6,7 @@ on:
   pull_request:
     branches:
       - master
-  workflow_dispatch:
+  workflow_dispatch: 
 
 jobs:
   validation:
@@ -25,7 +25,12 @@ jobs:
 
       - name: Gitleaks Scan
         run: |
+          # Debug output
+          echo "Current branch: $(git branch --show-current)"
+          git log --oneline
+
           git log --format="%H" --reverse | while read commit_hash; do
+            echo "Scanning commit: $commit_hash"
             git checkout $commit_hash
             gitleaks --path . --verbose
           done
