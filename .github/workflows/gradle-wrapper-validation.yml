@@ -1,30 +1,50 @@
-name: "Validate Gradle Wrapper"
+name: Security Check
 on:
   push:
     branches:
-      - master
-  pull_request:
-    branches:
-      - master
-  workflow_dispatch: 
+      - 'master'
 
 jobs:
-  validation:
-    name: "Validation"
-    runs-on: ubuntu-latest
+  Docker:
+    name: Docker Check
+    runs-on: ci
     steps:
-      - uses: actions/checkout@v2.3.4
+      - name: Checkout code
+        uses: actions/checkout@v3    
+  
+      - name: Scan dockerfile for Policy violation github
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          hide-progress: false
+          format: 'table'
+          ignore-unfixed: true
 
-      - name: GitLeaks Scan
-        run: |
-          curl -sfL https://github.com/zricethezav/gitleaks/releases/download/v7.7.0/gitleaks-linux-amd64 -o gitleaks
-          chmod +x gitleaks
-          if [ ! -x ./gitleaks ]; then
-            echo "GitLeaks binary is not executable."
-            exit 1
-          fi
-          mkdir -p $RUNNER_TOOL_CACHE
-          mv gitleaks $RUNNER_TOOL_CACHE
-          # Run GitLeaks scan on the repository
-          gitleaks --path . --verbose
-        if: always()
+      - name: Scan dockerfile for Policy violation sarif
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          hide-progress: false
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          ignore-unfixed: true  
+
+      - name: Parse SARIF file
+        uses: Miragon/sarif-report-parse@v1.0.3
+        with:
+          sarif-file: trivy-results.sarif
+
+      - name: Run Trivy in GitHub SBOM mode and submit results to Dependency Graph
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'
+          format: 'github'
+          output: 'dependency-results.sbom.json'
+          image-ref: '.'
+          github-pat: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Trivy SARIF Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-report
+          path: trivy-results.sarif
