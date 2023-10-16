@@ -6,25 +6,27 @@ on:
   pull_request:
     branches:
       - master
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   validation:
     name: "Validation"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - name: Checkout code
+        uses: actions/checkout@v2.3.4
 
       - name: Setup Gitleaks
         id: gitleaks
-        shell: bash
         run: |
           curl -LO "https://github.com/zricethezav/gitleaks/releases/download/v7.2.0/gitleaks-linux-amd64"
           chmod +x gitleaks-linux-amd64
           sudo mv gitleaks-linux-amd64 /usr/local/bin/gitleaks
 
       - name: Gitleaks Scan
-        shell: bash
-        run: cd ./ 
-        run: gitleaks --path . --verbose
-
+        run: |
+          git log --format="%H" --reverse | while read commit_hash; do
+            git checkout $commit_hash
+            gitleaks --path . --verbose
+          done
+          git checkout ${{ github.ref }}
