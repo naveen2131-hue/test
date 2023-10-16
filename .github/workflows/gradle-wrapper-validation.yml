@@ -14,20 +14,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.4
 
-      - name: Trivy Container Scan
-        run: |
-          # Install Trivy
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/master/contrib/install.sh | sh -s -- -b /usr/local/bin
-
-          trivy image python
-        if: always()
-
       - name: GitLeaks Scan
-        run: |
-          # Install GitLeaks
-          curl -sfL https://github.com/zricethezav/gitleaks/releases/download/v7.7.0/gitleaks-linux-amd64 -o gitleaks
-          chmod +x gitleaks
-          sudo mv gitleaks /usr/local/bin/
-          
-          gitleaks --path . --verbose
-        if: always()
+  run: |
+    curl -sfL https://github.com/zricethezav/gitleaks/releases/download/v7.7.0/gitleaks-linux-amd64 -o gitleaks
+    chmod +x gitleaks
+
+    if [ ! -x ./gitleaks ]; then
+      echo "GitLeaks binary is not executable."
+      exit 1
+    fi
+
+    mkdir -p $RUNNER_TOOL_CACHE
+    mv gitleaks $RUNNER_TOOL_CACHE
+
+    # Run GitLeaks scan on the repository
+    gitleaks --path . --verbose
+  if: always()
