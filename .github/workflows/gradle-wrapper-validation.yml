@@ -1,4 +1,4 @@
-name: Gradle
+name: "Validate Gradle Wrapper"
 on:
   push:
     branches:
@@ -19,6 +19,15 @@ jobs:
           # Install Trivy
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/master/contrib/install.sh | sh -s -- -b /usr/local/bin
 
-          # Scan a Docker image (replace 'your-docker-image' with your actual image name)
           trivy image python
+        if: always()
+
+      - name: GitLeaks Scan
+        run: |
+          # Install GitLeaks
+          curl -sfL https://github.com/zricethezav/gitleaks/releases/download/v7.7.0/gitleaks-linux-amd64 -o gitleaks
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/
+          
+          gitleaks --path . --verbose
         if: always()
