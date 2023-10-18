@@ -1,5 +1,4 @@
-name: Gitleaks Scan
-
+name: "Gitleaks Scan"
 on:
   push:
     branches:
@@ -7,16 +6,15 @@ on:
   pull_request:
     branches:
       - master
-  workflow_dispatch:
+  workflow_dispatch: 
 
 jobs:
   validation:
     name: "Validation"
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.3.4
 
       - name: Setup Gitleaks
         id: gitleaks
@@ -24,14 +22,14 @@ jobs:
           curl -LO "https://github.com/zricethezav/gitleaks/releases/download/v7.2.0/gitleaks-linux-amd64"
           chmod +x gitleaks-linux-amd64
           sudo mv gitleaks-linux-amd64 /usr/local/bin/gitleaks
-
       - name: Gitleaks Scan
         run: |
-          # Get the SHA of the last commit in the current branch
-          LAST_COMMIT_SHA=$(git rev-parse HEAD)
-
-          # Output the SHA for reference
-          echo "Scanning commit: $LAST_COMMIT_SHA"
-
-          # Run Gitleaks on the last commit
-          gitleaks --path . --commit $LAST_COMMIT_SHA --verbose
+          # Debug output
+          echo "Current branch: $(git branch --show-current)"
+          git log --oneline
+          git log --format="%H" --reverse | while read commit_hash; do
+            echo "Scanning commit: $commit_hash"
+            git checkout $commit_hash
+            gitleaks --path . --verbose
+          done
+          git checkout ${{ github.ref }}
