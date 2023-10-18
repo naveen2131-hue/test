@@ -1,11 +1,12 @@
-name: gitleaks
-on: [pull_request, push, workflow_dispatch]
-jobs:
-  scan:
-    name: gitleaks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+- name: Setup Gitleaks
+        id: gitleaks
+        shell: bash
+        run: |
+          curl -LO "https://github.com/zricethezav/gitleaks/releases/download/v7.2.0/gitleaks-linux-amd64"
+          chmod +x gitleaks-linux-amd64
+          sudo mv gitleaks-linux-amd64 /usr/local/bin/gitleaks
+
+      # Gitleaks Scan
+      - name: Gitleaks Scan
+        shell: bash
+        run: gitleaks detect -v -r ${{github.workspace}}
