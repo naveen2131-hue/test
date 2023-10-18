@@ -1,12 +1,10 @@
 - name: Setup Gitleaks
-        id: gitleaks
-        shell: bash
-        run: |
-          curl -LO "https://github.com/zricethezav/gitleaks/releases/download/v7.2.0/gitleaks-linux-amd64"
-          chmod +x gitleaks-linux-amd64
-          sudo mv gitleaks-linux-amd64 /usr/local/bin/gitleaks
+  id: gitleaks
+  run: |
+    curl -LO "https://github.com/zricethezav/gitleaks/releases/download/v7.2.0/gitleaks-linux-amd64"
+    chmod +x gitleaks-linux-amd64
+    sudo mv gitleaks-linux-amd64 /usr/local/bin/gitleaks
 
-      # Gitleaks Scan
-      - name: Gitleaks Scan
-        shell: bash
-        run: gitleaks detect -v -r ${{github.workspace}}
+# Gitleaks Scan
+- name: Gitleaks Scan
+  run: gitleaks detect -v -r ${{github.workspace}}
