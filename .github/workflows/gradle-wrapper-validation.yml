@@ -1,35 +1,14 @@
-name: "Gitleaks Scan"
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
-  workflow_dispatch: 
-
+name: gitleaks
+on: [pull_request, push, workflow_dispatch]
 jobs:
-  validation:
-    name: "Validation"
+  scan:
+    name: gitleaks
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2.3.4
-
-      - name: Setup Gitleaks
-        id: gitleaks
-        run: |
-          curl -LO "https://github.com/zricethezav/gitleaks/releases/download/v7.2.0/gitleaks-linux-amd64"
-          chmod +x gitleaks-linux-amd64
-          sudo mv gitleaks-linux-amd64 /usr/local/bin/gitleaks
-      - name: Gitleaks Scan
-        run: |
-          # Debug output
-          echo "Current branch: $(git branch --show-current)"
-          git log --oneline
-          git log --format="%H" --reverse | while read commit_hash; do
-            echo "Scanning commit: $commit_hash"
-            git checkout $commit_hash
-            gitleaks --path . --verbose
-          done
-          git checkout ${{ github.ref }}
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        with:
+          config-path: .github/gitleaks.toml
+          commits: all
