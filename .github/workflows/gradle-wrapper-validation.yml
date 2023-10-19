@@ -9,6 +9,3 @@ jobs:
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@v2
-        with:
-          config-path: .github/gitleaks.toml
-          commits: all
